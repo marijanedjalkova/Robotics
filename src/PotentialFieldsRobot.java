@@ -8,19 +8,19 @@ import geometry.*;
 import renderables.*;
 
 public class PotentialFieldsRobot {
-	private final RenderablePoint robotPicAlt; //Default image
-	private IntPoint coords; //Position of robot
-	private double heading; //Robot's heading in radians
-	private final int radius; //Size of the robot (Our robot is a circle)
-	private final int sensorRange; //Range of sensors
-	private final int stepSize; //How far the robot moves each step, in pixels
-	private final int sensorDensity; //Number of 'lines' the robot uses to see
-	private IntPoint goal;
-	private int goalRadius;
-	private final List<Renderable> obstacles; //All of the obstacles on the map
-	private List<IntPoint> visibleObstacles;
-	private  int sampleSize;
-	private final int sampleSizeDefault;
+	protected final RenderablePoint robotPicAlt; //Default image
+	protected IntPoint coords; //Position of robot
+	protected double heading; //Robot's heading in radians
+	protected final int radius; //Size of the robot (Our robot is a circle)
+	protected final int sensorRange; //Range of sensors
+	protected final int stepSize; //How far the robot moves each step, in pixels
+	protected final int sensorDensity; //Number of 'lines' the robot uses to see
+	protected IntPoint goal;
+	protected int goalRadius;
+	protected final List<Renderable> obstacles; //All of the obstacles on the map
+	protected List<IntPoint> visibleObstacles;
+	protected  int sampleSize;
+	protected final int sampleSizeDefault;
 
 	/**
 	 * Set the robot moving towards a goal on the screen with set radius, step size, etc.
@@ -71,7 +71,7 @@ public class PotentialFieldsRobot {
 	 * Evaluate all of the robot's potential movement positions & return the best.
 	 * @return The most valuable point
 	 */
-	private IntPoint evaluateSamplePoints() {
+	protected IntPoint evaluateSamplePoints() {
 		List<IntPoint>moves = getSamplePoints();
 		//If there's no moves that don't go through obstacles, quit
 		if(moves.size() == 0) {
@@ -89,7 +89,7 @@ public class PotentialFieldsRobot {
 	 * Evaluate all of the robot's potential movement positions & return the best.
 	 * @return The most valuable point
 	 */
-	private IntPoint evaluateMovePoints(IntPoint goal) {
+	protected IntPoint evaluateMovePoints(IntPoint goal) {
 		List<IntPoint>moves = getMoveablePoints();
 		//If there's no moves that don't go through obstacles, quit
 		if(moves.size() == 0) {
@@ -108,7 +108,7 @@ public class PotentialFieldsRobot {
 	 * @param p The point to evaluate
 	 * @return The value of the point
 	 */
-	private double evalMove(IntPoint p, IntPoint goal) {
+	protected double evalMove(IntPoint p, IntPoint goal) {
 		//Get distances to goal & all visible objects
 		double goalDist = (distance(p, goal)-radius) / 10; //Everything is divided by 10 because otherwise the numbers get too big
 		double[] obsDists = new double[visibleObstacles.size()];
@@ -213,7 +213,7 @@ public class PotentialFieldsRobot {
 	 * getIntersectionPoint() on the target line and each of the polygon's lines. Once all intersection 
 	 * points are found, the closest to the robot is returned. It is assumed all polygons are convex.
 	 */
-	private IntPoint intersects(Line2D.Double line) {
+	protected IntPoint intersects(Line2D.Double line) {
 		ArrayList<IntPoint> intersections = new ArrayList<IntPoint>();
 		for(Renderable obstacle : obstacles) {
 			if (obstacle.getClass() == RenderablePolyline.class) {
@@ -288,7 +288,7 @@ public class PotentialFieldsRobot {
 	 * @param points A list of point
 	 * @return The point with the smallest distance from the robot
 	 **/
-	private IntPoint lowestDist(ArrayList<IntPoint> points) {
+	protected IntPoint lowestDist(ArrayList<IntPoint> points) {
 		int lowest = 0;
 		for(int i=0;i<points.size();i++) {
 			if (distance(points.get(i), coords) < distance(points.get(lowest), coords))
@@ -301,7 +301,7 @@ public class PotentialFieldsRobot {
 	 * Have the robot move along a certain heading
 	 * @param heading The heading to move along. 
 	 **/
-	private void moveTowards(double heading) {
+	protected void moveTowards(double heading) {
 		int length = (int) (stepSize * Math.cos(heading));
 		int height = (int) (stepSize * Math.sin(heading));
 		coords.x += length;
@@ -316,7 +316,7 @@ public class PotentialFieldsRobot {
 	 * @param heading The heading to move along
 	 * @param step The distance to travel along that heading
 	 **/
-	private IntPoint getPointTowards(double heading, int step) {
+	protected IntPoint getPointTowards(double heading, int step) {
 		int length = (int) (step * Math.cos(heading));
 		int height = (int) (step * Math.sin(heading));
 		return new IntPoint(coords.x+length, coords.y+height);
@@ -327,7 +327,7 @@ public class PotentialFieldsRobot {
 	 * the angle is greater than 60 degrees, truncate it to 60 degrees,=.
 	 * @param end The destination point
 	 **/
-	private double calculateHeading(IntPoint end) {
+	protected double calculateHeading(IntPoint end) {
 		double grad = Math.abs(((double)end.y - (double)coords.y) 
 				/ ((double)end.x - (double)coords.x));
 		double angle = Math.atan(grad);
@@ -350,7 +350,7 @@ public class PotentialFieldsRobot {
 	/**
 	 * Get the position of the smallest number in an array of doubles 
 	 **/
-	private int minIndex(double[] nums) {
+	protected int minIndex(double[] nums) {
 		int minIndex = 0;
 		for(int i=1;i<nums.length;i++) {
 			if(nums[i] < nums[minIndex]) minIndex = i; 
@@ -361,7 +361,7 @@ public class PotentialFieldsRobot {
 	/**
 	 * Get the distance between two points. 
 	 **/
-	private static double distance(IntPoint a, IntPoint b) {
+	protected static double distance(IntPoint a, IntPoint b) {
 		return Math.sqrt(Math.pow((a.x-b.x), 2) + Math.pow((a.y-b.y), 2));
 	}
 
@@ -379,7 +379,7 @@ public class PotentialFieldsRobot {
 	 * @param line2 The second line
 	 * @return The point of intersection, or null.
 	 */
-	private static IntPoint getIntersectionPoint(Line2D.Double line1, Line2D.Double line2) {
+	protected static IntPoint getIntersectionPoint(Line2D.Double line1, Line2D.Double line2) {
 		if (! line1.intersectsLine(line2) ) return null;
 		double px = line1.getX1(),
 				py = line1.getY1(),
@@ -406,7 +406,7 @@ public class PotentialFieldsRobot {
 	 * negative number if the dividend is negative, which is unhelpful when my calculations are
 	 * performed between 0 and 2PI, rather than -PI and PI.
 	 **/
-	private static double mod(double a, double b) {
+	protected static double mod(double a, double b) {
 		return ((a % b) + b) % b;
 	}
 	
@@ -414,7 +414,7 @@ public class PotentialFieldsRobot {
 	 * Find the distance from the robot to the closest visible obstacle, or some default if
 	 * none are visible 
 	 **/
-	private int distanceToClosestObstacle() {
+	protected int distanceToClosestObstacle() {
 		if(visibleObstacles.size()==0) return sampleSizeDefault;
 		int closest = 0;
 		for(int i=0;i<visibleObstacles.size();i++) 
