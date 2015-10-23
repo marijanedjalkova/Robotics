@@ -135,14 +135,14 @@ public class PotentialFieldsRobot {
 
 	/**
 	 * Get all of the points the robot can move to - the robot moves 10 pixels forward, 
-	 * and can turn upto 12 degrees in either direction to simulate continuous movement.
+	 * and can turn up to 12 degrees in either direction to simulate continuous movement.
 	 */
 	public List<IntPoint> getMoveablePoints() {
 		List<IntPoint> moveablePoints = new ArrayList<IntPoint>(5);
 		double angleBetween = Math.toRadians(3);
 		double currentAngle = mod(heading-Math.toRadians(12), 2*Math.PI);
 		for(int i=0;i<9;i++) { 
-			//Only make this a 'moveable' point if it does not touch an obstacle
+			//Only make this a 'move-able' point if it does not touch an obstacle
 			Line2D.Double line = new Line2D.Double();
 			IntPoint p2 = getPointTowards(currentAngle, stepSize);
 			line.setLine(coords.x, coords.y, p2.x, p2.y);
@@ -170,7 +170,7 @@ public class PotentialFieldsRobot {
 		double currentAngle = mod(heading-Math.PI/2, 2*Math.PI);
 		sampleSize = distanceToClosestObstacle(); //Sample size changes based on closest obstacle
 		for(int i=0;i<sensorDensity;i++) {
-			//Only make this a 'moveable' point if it does not touch an obstacle
+			//Only make this a 'move-able' point if it does not touch an obstacle
 			Line2D.Double line = new Line2D.Double();
 			IntPoint p2 = getPointTowards(currentAngle, sampleSize);
 			line.setLine(coords.x, coords.y, p2.x, p2.y);
@@ -278,14 +278,13 @@ public class PotentialFieldsRobot {
 					IntPoint intersect = getIntersectionPoint(line, obsLine);
 					if(intersect != null) intersections.add(intersect);
 				}
-				
 			}
 		}
 		return intersections.size() == 0 ? null : lowestDist(intersections);
 	}
 
 	/**
-	 * Get the closest point to the robot's coords
+	 * Get the closest point to the robot's coordinates
 	 * @param points A list of point
 	 * @return The point with the smallest distance from the robot
 	 **/
