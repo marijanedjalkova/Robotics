@@ -23,8 +23,7 @@ public class PotentialFields
 	private final int easyCourseId;
 	private final int medCourseId;
 	private final int hardCourseId;
-	private final int enMikeId;
-	private final int disMikeId;
+
 	
 	private final int startXId;
 	private final int startYId;
@@ -35,8 +34,7 @@ public class PotentialFields
 	private final int robotSensorRangeId;
 	private final int robotSensorDensityId;
 	private final int robotSpeedId;
-	private boolean mike;
-	
+
 	private final int frameLength = 1200;
 	private final int frameHeight = 900;
 	private final int graphicsHeight = 700;
@@ -81,13 +79,6 @@ public class PotentialFields
 		gui.addLabel(0, 8, "Robot Speed (moves/second):");
 		robotSpeedId = gui.addTextField(0, 9, null);
 		
-		//More options
-		gui.addLabel(5, 0, "Mike Mode: ");
-		enMikeId = gui.addButton(5, 1, "On", this, "enableMike");
-		disMikeId = gui.addButton(5, 2, "Off", this, "disableMike");
-		gui.setButtonEnabled(disMikeId, false);
-		mike = false;
-		
 		gui.addLabel(0,-1,"Leave fields blank for random values!");
 		
 		//Pre-made courses
@@ -114,18 +105,6 @@ public class PotentialFields
 	public void quit() {
 		gui.hide();
 		System.exit(0);
-	}
-	
-	public void enableMike() {
-		this.mike = true;
-		gui.setButtonEnabled(enMikeId, false);
-		gui.setButtonEnabled(disMikeId, true);
-	}
-	
-	public void disableMike() {
-		this.mike = false;
-		gui.setButtonEnabled(enMikeId, true);
-		gui.setButtonEnabled(disMikeId, false);
 	}
 	
 	/**
@@ -364,11 +343,9 @@ public class PotentialFields
 		if(robotSpeeds.equals("")) robotSpeed = 40; //Default speed is 40 moves per second
 		else robotSpeed = Integer.parseInt(robotSpeeds);
 		gui.setTextFieldContent(robotSpeedId, ""+robotSpeed);
-		
-		String image = mike ? "mike.png" : null;
 
 		goLittleRobot(new IntPoint(startX, startY), new IntPoint(goalX, goalY), radius, 
-				      robotRadius, robotSensorRange, robotSensorDensity, robotSpeed, image);
+				      robotRadius, robotSensorRange, robotSensorDensity, robotSpeed, null);
 	}
 	
 	/**
@@ -398,7 +375,7 @@ public class PotentialFields
 		gui.setButtonEnabled(hardCourseId, false);
 		
 		//Create the robot, start & end points, renderables
-		PotentialFieldsRobot rob = new PotentialFieldsRobot(image, start, goal, robotRadius, robotSensorRange, 
+		PotentialFieldsRobot rob = new CarriageRobot(image, start, goal, robotRadius, robotSensorRange, 
 							  robotSensorDensity, goalRad, obstacles);
 		RRTree startAndGoal = new RRTree(Color.black);
 		startAndGoal.setStartAndGoal(start, goal, goalRad);
