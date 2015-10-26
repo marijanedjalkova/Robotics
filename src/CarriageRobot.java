@@ -8,7 +8,7 @@ import renderables.Renderable;
 public class CarriageRobot extends PotentialFieldsRobot {
 
 	private final double MAXSPEED = 10;
-	private final double MINSPEED = 0.2;
+	private final double MINSPEED = 2;
 	double width; //distance between the centre of 2 wheels
 
 	public CarriageRobot(String imagePath, IntPoint startingLocation, IntPoint goalLocation, int radius,
@@ -36,12 +36,12 @@ public class CarriageRobot extends PotentialFieldsRobot {
 	
 	
 	public PotentialPoint evaluateMovePoint(IntPoint moveTo){
-		double step = 0.6;
+		double step = 0.5;
 		ArrayList<PotentialPoint> points = new ArrayList<PotentialPoint>();
 		
 		for (double l = MINSPEED; l < MAXSPEED; l = l + step){
 			for (double r = MINSPEED; r < MAXSPEED; r = r + step){
-				if (Math.abs(r - l) <= 5){
+				if (Math.abs(r - l) <= 6){
 					PotentialPoint potential = getPointTowards(r, l);
 					if (potential != null){
 						Line2D.Double line = new Line2D.Double(coords.x, coords.y, 
@@ -59,7 +59,7 @@ public class CarriageRobot extends PotentialFieldsRobot {
 		for (int i = 0; i < moveValues.length; i++){
 			double newX =(coords.x + points.get(i).changeX);
 			double newY =(coords.y + points.get(i).changeY);
-			moveValues[i] = evalMoveDouble(newX, newY, moveTo) + 
+			moveValues[i] = evalMoveDouble(newX, newY, moveTo) * 
 					doubleDistance(newX, newY, moveTo.x, moveTo.y);
 		}
 
