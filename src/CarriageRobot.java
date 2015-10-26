@@ -1,3 +1,4 @@
+import java.awt.geom.Line2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -5,90 +6,115 @@ import geometry.IntPoint;
 import renderables.Renderable;
 
 public class CarriageRobot extends PotentialFieldsRobot {
-	double Vr, Vl; //speeds of wheels
+
 	private final double MAXSPEED = 10;
-	private final double MINSPEED = 0.01;
-	double l; //distance between the centre of 2 wheels
+	private final double MINSPEED = 0.2;
+	double width; //distance between the centre of 2 wheels
 
 	public CarriageRobot(String imagePath, IntPoint startingLocation, IntPoint goalLocation, int radius,
 			int sensorRange, int sensorDensity, int goalRadius, List<Renderable> obstacles) {
 		super(imagePath, startingLocation, goalLocation, radius, sensorRange, sensorDensity, goalRadius, obstacles);
-		l = 1;
-		Vr = 5;
-		Vl = 5;
+		width = 0.5;
 	}
 	
 	@Override
 	public boolean move(){
-		PotentialPoint makeMove = evaluateMovePoints(); //Find the best move point using current sample as goal
+		IntPoint moveTo = evaluateSamplePoints(); //Pick a sample point to move towards
+		if (moveTo == null) return false;
+		PotentialPoint makeMove = evaluateMovePoint(moveTo); //Find the best move point using current sample as goal
 		if (makeMove == null) return false;
-		moveTowards(makeMove); //Make the move
+		moveTowardsPoint(makeMove); //Make the move
 		return true;
 	}
+
 	
-	public void moveTowards(PotentialPoint p){
-		System.out.println(" changeX " + p.changeX + " changeY " + p.changeY);
+	public void moveTowardsPoint(PotentialPoint p){
 		coords.x += (int)(p.changeX);		
 		coords.y += (int)(p.changeY);
-		System.out.println("newX " + coords.x + " newY " + coords.y);
 		heading = p.heading;
 	}
 	
-	public PotentialPoint evaluateMovePoints(){
-		double step = 1;
+	
+	public PotentialPoint evaluateMovePoint(IntPoint moveTo){
+		double step = 0.6;
 		ArrayList<PotentialPoint> points = new ArrayList<PotentialPoint>();
-		double maxChange = 5;
-		double lLow = Vl - maxChange < MINSPEED ? MINSPEED : Vl - maxChange;
-		double lHigh = Vl + maxChange > MAXSPEED ? MAXSPEED : Vl + maxChange;
-		double rLow = Vr - maxChange < MINSPEED ? MINSPEED : Vr - maxChange;
-		double rHigh = Vr + maxChange > MAXSPEED ? MAXSPEED : Vr + maxChange;
-		System.out.println("====vl " + Vl + " vr " + Vr);
-		System.out.println("llow " + lLow + " lHigh " + lHigh);
-		System.out.println("rlow " + rLow + " rHigh " + rHigh);
 		
-		for (double l = lLow; l < lHigh; l = l + step){
-			for (double r = rLow; r < rHigh; r = r + step){
-				PotentialPoint potential = getPointTowards(r, l);
-				points.add(potential);
+		for (double l = MINSPEED; l < MAXSPEED; l = l + step){
+			for (double r = MINSPEED; r < MAXSPEED; r = r + step){
+				if (Math.abs(r - l) <= 5){
+					PotentialPoint potential = getPointTowards(r, l);
+					if (potential != null){
+						Line2D.Double line = new Line2D.Double(coords.x, coords.y, 
+								coords.x + potential.changeX, coords.y + potential.changeY);
+						if (intersects(line) == null)
+							points.add(potential);
+					}
+				}
+
 			}
 		}
 		if (points.size() == 0)
 			return null;
 		double[]moveValues = new double[points.size()];
 		for (int i = 0; i < moveValues.length; i++){
-			int newX =(int) (coords.x + points.get(i).changeX);
-			int newY =(int) (coords.y + points.get(i).changeY);
-			IntPoint p = new IntPoint(newX, newY);
-			moveValues[i] = evalMove(p, goal);
+			double newX =(coords.x + points.get(i).changeX);
+			double newY =(coords.y + points.get(i).changeY);
+			moveValues[i] = evalMoveDouble(newX, newY, moveTo) + 
+					doubleDistance(newX, newY, moveTo.x, moveTo.y);
 		}
+
 		return points.get(minIndex(moveValues));
 	}
 	
+	public double evalMoveDouble(double x, double y, IntPoint miniGoal){
+		//Get distances to goal & all visible objects
+				double goalDist = (doubleDistance(x, y, miniGoal.x, miniGoal.y)-radius) / 10; //Everything is divided by 10 because otherwise the numbers get too big
+				double[] obsDists = new double[visibleObstacles.size()];
+				for(int i=0;i<visibleObstacles.size();i++) {
+					//Distance is set to 0 if it's closer than the radius to the obstacle
+					obsDists[i] = (doubleDistance(x, y, 
+							visibleObstacles.get(i).x, visibleObstacles.get(i).y) - radius) 
+							<= 0 ? 0 : (doubleDistance(x, y, visibleObstacles.get(i).x,
+									visibleObstacles.get(i).y) - radius) / 10;
+				}
+				//Calculate field power - x^2 so value gets small as distance decreases
+				double goalField = Math.pow(goalDist, 2);
+				//obs. field power is sum of all obstacles, and gets v. large as distance decreases and vice versa
+				double obsField = 0;
+				for(int i=0;i<visibleObstacles.size();i++) {
+					if(obsDists[i] <= 0) {
+						obsField = Double.MAX_VALUE;
+						break;
+					} else if (obsDists[i] > sensorRange) {
+						continue;
+					}
+					obsField += Math.pow(Math.E, -1 / ((sensorRange) - obsDists[i])) / (obsDists[i]);
+				}
+				return 10*goalField + Math.pow(2*radius,2)*4750*obsField / (sensorDensity*sensorRange);
+	}
+	
+	public double doubleDistance(double x1, double y1, double x2, double y2){
+		return Math.sqrt(Math.pow((x1-x2), 2) + Math.pow((y1-y2), 2));
+	}
+	
 	public PotentialPoint getPointTowards(double r, double l){
-		double R = l/2 * ((r + l)/(r - l));
+		double R = width/2 * ((r + l)/(r - l));
 		//System.out.println("R " + R);
-		double w = (r - l)/l;
+		double w = (r - l)/width;
 		double wRad = mod(Math.toRadians(w), 2*Math.PI);
-		//System.out.println("wRad " + wRad);
-		double ICCx = coords.x - R*Math.sin(heading);
-		double ICCy = coords.y + R*Math.cos(heading);
-		double newX = Math.cos(wRad)*(coords.x - ICCx) - Math.sin(wRad)*(coords.y - ICCy) + ICCx;
-		double newY = Math.sin(wRad)*(coords.x - ICCx) + Math.cos(wRad)*(coords.y - ICCy) + ICCy;
+		if (Math.floor(w*100)==0 || Math.ceil(w*100)==0) {
+			return null;
+		}
 		
-		
-		double changeX = R*(Math.sin(heading)*Math.cos(wRad)+Math.sin(wRad)*Math.cos(heading) - Math.sin(heading));
-		double changeY = R*(Math.sin(heading)*Math.sin(wRad)-Math.cos(wRad)*Math.cos(heading) + Math.cos(heading));
+		double changeX = Math.sin(heading)*R*Math.cos(wRad)+Math.sin(wRad)*R*Math.cos(heading) - R*Math.sin(heading);
+		double changeY = Math.sin(heading)*R*Math.sin(wRad)-Math.cos(wRad)*R*Math.cos(heading) + R*Math.cos(heading);
 		
 		while (Math.abs(changeX) < 1  && Math.abs(changeY) < 1) {	
-			changeX*=10;			
-			changeY*=10;		
+			changeX = changeX * 10;			
+			changeY = changeY * 10;		
 		}
-
-		//System.out.println(" changeX " + changeX + " changeY " + changeY);
-				
 		double newHeading = mod(heading + wRad, 2*Math.PI);
-		//System.out.println("heading " + newHeading);
-		return new PotentialPoint(newX, newY, newHeading, changeX, changeY);
+		return new PotentialPoint(newHeading, changeX, changeY);
 	}
 	
 	

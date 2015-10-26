@@ -470,7 +470,7 @@ public class PotentialFields
 			gui.draw(r);
 			gui.draw(pp);
 		}
-		for(IntPoint p :rob.getSamplePoints()) {
+		/*for(IntPoint p :rob.getSamplePoints()) {
 			RenderablePolyline r = new RenderablePolyline();
 			r.addPoint(rob.getPosition().x, rob.getPosition().y);
 			r.addPoint(p.x, p.y);
@@ -479,6 +479,26 @@ public class PotentialFields
 			pp.setProperties(Color.BLUE, 6f);
 			gui.draw(r);
 			gui.draw(pp);
+		}*/
+		
+		for (IntPoint p : rob.getSamplePoints()) {
+			RenderablePoint pp = new RenderablePoint(p.x, p.y);
+			pp.setProperties(Color.BLUE, 4f);
+			gui.draw(pp);
+		}
+
+		IntPoint cl = rob.evaluateSamplePoints();
+		if (cl != null) {
+			RenderablePoint pp = new RenderablePoint(cl.x, cl.y);
+			pp.setProperties(Color.PINK, 6f);
+			gui.draw(pp);
+			/*CarriageRobot.pointAndAngle p = rob.evaluateMovePointsWithAngles(cl);
+
+			if (p != null) {
+				RenderablePoint pp1 = new RenderablePoint(p.p.x, p.p.y);
+				pp1.setProperties(Color.BLACK, 6f);
+				gui.draw(pp1);
+			}*/
 		}
 	}
 	
