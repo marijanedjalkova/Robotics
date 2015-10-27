@@ -86,6 +86,26 @@ public class PotentialFieldsRobot {
 	}
 	
 	/**
+	 * Get a list of all the sample points evenly distributed in a 180-degree arc in front of the robot 
+	 **/
+	public List<IntPoint> getSamplePoints() {
+		List<IntPoint> moveablePoints = new ArrayList<IntPoint>(sensorDensity);
+		double angleBetween = Math.PI / (sensorDensity-1);
+		double currentAngle = mod(heading-Math.PI/2, 2*Math.PI);
+		sampleSize = distanceToClosestObstacle(); //Sample size changes based on closest obstacle
+		for(int i=0;i<sensorDensity;i++) {
+			//Only make this a 'move-able' point if it does not touch an obstacle
+			Line2D.Double line = new Line2D.Double();
+			IntPoint p2 = getPointTowards(currentAngle, sampleSize);
+			line.setLine(coords.x, coords.y, p2.x, p2.y);
+			if(intersects(line) == null) 
+				moveablePoints.add(p2);
+			currentAngle+=angleBetween;
+		}
+		return moveablePoints;
+	}
+	
+	/**
 	 * Evaluate all of the robot's potential movement positions & return the best.
 	 * @return The most valuable point
 	 */
@@ -161,25 +181,7 @@ public class PotentialFieldsRobot {
 		return moveablePoints;
 	}
 	
-	/**
-	 * Get a list of all the sample points evenly distributed in a 180-degree arc in front of the robot 
-	 **/
-	public List<IntPoint> getSamplePoints() {
-		List<IntPoint> moveablePoints = new ArrayList<IntPoint>(sensorDensity);
-		double angleBetween = Math.PI / (sensorDensity-1);
-		double currentAngle = mod(heading-Math.PI/2, 2*Math.PI);
-		sampleSize = distanceToClosestObstacle(); //Sample size changes based on closest obstacle
-		for(int i=0;i<sensorDensity;i++) {
-			//Only make this a 'move-able' point if it does not touch an obstacle
-			Line2D.Double line = new Line2D.Double();
-			IntPoint p2 = getPointTowards(currentAngle, sampleSize);
-			line.setLine(coords.x, coords.y, p2.x, p2.y);
-			if(intersects(line) == null) 
-				moveablePoints.add(p2);
-			currentAngle+=angleBetween;
-		}
-		return moveablePoints;
-	}
+
 
 	/**
 	 * Get all of the points the robot can move to - the number is equal to the robot's sensor density
