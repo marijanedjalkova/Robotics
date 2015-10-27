@@ -382,6 +382,7 @@ public class PotentialFields
 		RenderableString rs = null;
 		RenderableString rs2 = null;
 		RenderablePolyline path = new RenderablePolyline();
+		ArrayList<Renderable> planned = new ArrayList<Renderable>();
 		path.setProperties(Color.BLACK, 1f);
 		path.addPoint(start.x, start.y);
 		
@@ -427,6 +428,14 @@ public class PotentialFields
 			rs.setLayer(456);
 			rs.setProperties(Color.BLUE, new Font(Font.SERIF, Font.BOLD, 14));
 			gui.draw(rs);
+			
+			PotentialPoint next = ((CarriageRobot)rob).getNextMove();
+			IntPoint nextcentre = new IntPoint((int)(next.changeX + rob.coords.x), (int)(rob.coords.y + next.changeY));
+			RenderableOval o = new RenderableOval(nextcentre.x, nextcentre.y, 5, 5);
+			o.setProperties(Color.CYAN, 1f, true);
+			planned.add(o);
+			gui.draw(planned);
+			
 			
 			//Draw the current goal path smoothness
 			gui.unDraw(rs2);
@@ -490,7 +499,7 @@ public class PotentialFields
 		IntPoint cl = rob.evaluateSamplePoints();
 		if (cl != null) {
 			RenderablePoint pp = new RenderablePoint(cl.x, cl.y);
-			pp.setProperties(Color.PINK, 6f);
+			pp.setProperties(Color.ORANGE, 6f);
 			gui.draw(pp);
 			/*CarriageRobot.pointAndAngle p = rob.evaluateMovePointsWithAngles(cl);
 
