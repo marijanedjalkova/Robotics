@@ -23,7 +23,10 @@ public class PotentialFields
 	private final int easyCourseId;
 	private final int medCourseId;
 	private final int hardCourseId;
-
+	private final int euclideanId;
+	private final int quadraticId;
+	private final int manhattanId;
+	private final int arcId;
 	
 	private final int startXId;
 	private final int startYId;
@@ -39,6 +42,8 @@ public class PotentialFields
 	private final int frameHeight = 900;
 	private final int graphicsHeight = 700;
 	
+	private boolean euclidean, quadratic, manhattan, arc;
+	
 	private ArrayList<Renderable>obstacles;
 	
 	// MAIN
@@ -51,8 +56,10 @@ public class PotentialFields
 		//Set up the GUI, labels, buttons
 		gui = new EasyGui(frameLength, frameHeight);
 		
-		buttonId = gui.addButton(5, 5, "Go Little Robot!", this, "buttonAction");
+		
+		buttonId = gui.addButton(2, 4, "Go!", this, "buttonAction");
 		gui.addButton(2, 5, "Clear Fields", this, "clearButtonAction");
+		clearObsId = gui.addButton(2, 6, "Clear Obstacles", this, "clearObs");
 		
 		gui.addLabel(0, 0, "Starting X:");
 		startXId = gui.addTextField(0, 1, null);
@@ -81,25 +88,64 @@ public class PotentialFields
 		
 		gui.addLabel(0,-1,"Leave fields blank for random values!");
 		
+		
+		gui.addLabel(3, 0, "Select distance measure: ");
+		euclideanId = gui.addButton(3, 1, "Euclidean", this, "euclidean");
+		quadraticId = gui.addButton(3, 2, "Quadratic", this, "quadratic");
+		manhattanId = gui.addButton(3, 3, "Manhattan", this, "manhattan");
+		arcId = gui.addButton(3, 4, "Arc-based", this, "arc");
+		
 		//Pre-made courses
-		gui.addLabel(3, 0, "Select a pre-made course: ");
-		easyCourseId = gui.addButton(3, 1, "Easy", this, "easyCourse");
-		medCourseId = gui.addButton(3, 2, "Medium", this, "medCourse");
-		hardCourseId = gui.addButton(3, 3, "Hard", this, "hardCourse");
+		gui.addLabel(4, 0, "Select a pre-made course: ");
+		easyCourseId = gui.addButton(4, 1, "Easy", this, "easyCourse");
+		medCourseId = gui.addButton(4, 2, "Medium", this, "medCourse");
+		hardCourseId = gui.addButton(4, 3, "Hard", this, "hardCourse");
 		
 		//Custom obstacles
-		gui.addLabel(4, 0, "Or add in your own obstacles: ");
-		circleSId = gui.addButton(4, 1, "Circle (S)", this, "genCircleS");
-		circleLId = gui.addButton(4, 2, "Circle (L)", this, "genCircleL");
-		squareSId = gui.addButton(4, 3, "Square (S)", this, "genSquareS");
-		squareLId = gui.addButton(4, 4, "Square (L)", this, "genSquareL");
-		randomLineId = gui.addButton(4, 5, "Line", this, "genLine");
-		clearObsId = gui.addButton(4, 6, "Clear Obstacles", this, "clearObs");
+		gui.addLabel(5, 0, "Or add in your own obstacles: ");
+		circleSId = gui.addButton(5, 1, "Circle (S)", this, "genCircleS");
+		circleLId = gui.addButton(5, 2, "Circle (L)", this, "genCircleL");
+		squareSId = gui.addButton(5, 3, "Square (S)", this, "genSquareS");
+		squareLId = gui.addButton(5, 4, "Square (L)", this, "genSquareL");
+		randomLineId = gui.addButton(5, 5, "Line", this, "genLine");
+		
 				
 		gui.addButton(5, 10, "Quit", this, "quit");
 		
 		obstacles = new ArrayList<Renderable>();
-
+		
+		euclidean = true;
+	}
+	
+	public void cleanDistanceMeasurementChoice(){
+		euclidean = false;
+		quadratic = false;
+		manhattan = false;
+		arc = false;
+	}
+	
+	public void euclidean(){
+		cleanDistanceMeasurementChoice();
+		euclidean = true;
+		System.out.println("euclidean");
+	}
+	
+	public void quadratic(){
+		cleanDistanceMeasurementChoice();
+		quadratic = true;
+		System.out.println("quadratic");
+	}
+	
+	public void manhattan(){
+		cleanDistanceMeasurementChoice();
+		manhattan = true;
+		System.out.println("manhattan");
+	}
+	
+	public void arc(){
+		cleanDistanceMeasurementChoice();
+		arc = true;
+		System.out.println("arc");
 	}
 	
 	public void quit() {
@@ -373,16 +419,32 @@ public class PotentialFields
 		gui.setButtonEnabled(easyCourseId, false);
 		gui.setButtonEnabled(medCourseId, false);
 		gui.setButtonEnabled(hardCourseId, false);
+		gui.setButtonEnabled(euclideanId, false);
+		gui.setButtonEnabled(quadraticId, false);
+		gui.setButtonEnabled(manhattanId, false);
+		gui.setButtonEnabled(arcId, false);
+		
+		
+		int measurement = 0;
+		if (euclidean)
+			measurement = 0;
+		else if (quadratic)
+			measurement = 1;
+		else if (manhattan)
+			measurement = 2;
+		else if (arc)
+			measurement = 3;
 		
 		//Create the robot, start & end points, renderables
 		PotentialFieldsRobot rob = new CarriageRobot(image, start, goal, robotRadius, robotSensorRange, 
-							  robotSensorDensity, goalRad, obstacles);
+							  robotSensorDensity, goalRad, obstacles, measurement);
 		RRTree startAndGoal = new RRTree(Color.black);
 		startAndGoal.setStartAndGoal(start, goal, goalRad);
 		RenderableString rs = null;
 		RenderableString rs2 = null;
 		RenderablePolyline path = new RenderablePolyline();
-		ArrayList<Renderable> planned = new ArrayList<Renderable>();
+		RenderablePolyline planned = new RenderablePolyline();
+		
 		path.setProperties(Color.BLACK, 1f);
 		path.addPoint(start.x, start.y);
 		
@@ -390,6 +452,7 @@ public class PotentialFields
 		gui.clearGraphicsPanel();
 		gui.draw(startAndGoal);
 		gui.draw(path);
+		gui.draw(planned);
 		gui.draw(obstacles);
 		drawRobot(rob);
 		gui.update();
@@ -418,6 +481,7 @@ public class PotentialFields
 			gui.clearGraphicsPanel();
 			gui.draw(startAndGoal);
 			gui.draw(path);
+			gui.draw(planned);
 			gui.draw(obstacles);
 			drawRobot(rob);
 			
@@ -428,14 +492,14 @@ public class PotentialFields
 			rs.setLayer(456);
 			rs.setProperties(Color.BLUE, new Font(Font.SERIF, Font.BOLD, 14));
 			gui.draw(rs);
-			
+			/*
 			PotentialPoint next = ((CarriageRobot)rob).getNextMove();
 			IntPoint nextcentre = new IntPoint((int)(next.changeX + rob.coords.x), (int)(rob.coords.y + next.changeY));
 			RenderableOval o = new RenderableOval(nextcentre.x, nextcentre.y, 5, 5);
 			o.setProperties(Color.CYAN, 1f, true);
 			planned.add(o);
 			gui.draw(planned);
-			
+			*/
 			
 			//Draw the current goal path smoothness
 			gui.unDraw(rs2);
@@ -463,6 +527,10 @@ public class PotentialFields
 		gui.setButtonEnabled(easyCourseId, true);
 		gui.setButtonEnabled(medCourseId, true);
 		gui.setButtonEnabled(hardCourseId, true);
+		gui.setButtonEnabled(euclideanId, true);
+		gui.setButtonEnabled(quadraticId, true);
+		gui.setButtonEnabled(manhattanId, true);
+		gui.setButtonEnabled(arcId, true);
 	}
 	
 	/**
@@ -501,13 +569,7 @@ public class PotentialFields
 			RenderablePoint pp = new RenderablePoint(cl.x, cl.y);
 			pp.setProperties(Color.ORANGE, 6f);
 			gui.draw(pp);
-			/*CarriageRobot.pointAndAngle p = rob.evaluateMovePointsWithAngles(cl);
 
-			if (p != null) {
-				RenderablePoint pp1 = new RenderablePoint(p.p.x, p.p.y);
-				pp1.setProperties(Color.BLACK, 6f);
-				gui.draw(pp1);
-			}*/
 		}
 	}
 	

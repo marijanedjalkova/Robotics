@@ -11,13 +11,15 @@ public class CarriageRobot extends PotentialFieldsRobot {
 	private final double MINSPEED = 2;
 	double width; // distance between the centre of 2 wheels
 	public PotentialPoint nextMove;
-	public boolean quadratic, arc, euclidean, manhattan;
+	public int measurement;
 
 	public CarriageRobot(String imagePath, IntPoint startingLocation, IntPoint goalLocation, int radius,
-			int sensorRange, int sensorDensity, int goalRadius, List<Renderable> obstacles) {
+			int sensorRange, int sensorDensity, int goalRadius, List<Renderable> obstacles,
+			int measurement) {
 		super(imagePath, startingLocation, goalLocation, radius, sensorRange, sensorDensity, goalRadius, obstacles);
 		width = 0.5;
 		nextMove = null;
+		this.measurement = measurement;
 	}
 
 	@Override
@@ -81,14 +83,18 @@ public class CarriageRobot extends PotentialFieldsRobot {
 	public double evalMoveDouble(double x, double y, IntPoint miniGoal) {
 		// Get distances to goal & all visible objects
 		double goalDist = 0;
-		if (quadratic)
+		if (measurement ==1){
 			goalDist = (quadraticDistance(x, y, miniGoal.x, miniGoal.y) - radius) / 10;
-		else if (arc)
+		}
+		else if (measurement ==3){
 			goalDist = (arcDistance(coords.x, coords.y, x, y, goal.x, goal.y) - radius) / 10;
-		else if (manhattan)
+		}
+		else if (measurement ==2){
 			goalDist = (manhattanDistance(x, y, miniGoal.x, miniGoal.y) - radius) / 10;
-		else if (euclidean)
+		}
+		else if (measurement ==0){
 			goalDist = (euclideanDistance(x, y, miniGoal.x, miniGoal.y)-radius) / 10;
+		}
 		double[] obsDists = new double[visibleObstacles.size()];
 		for (int i = 0; i < visibleObstacles.size(); i++) {
 			// Distance is set to 0 if it's closer than the radius to the
@@ -126,18 +132,20 @@ public class CarriageRobot extends PotentialFieldsRobot {
 				/ (2 * (bSlope - aSlope));
 		double centreY = -1 * (centreX - (curX + planX) / 2) / aSlope + (curY + planY) / 2;
 
-		double diameter = 2 * euclideanDistance(centreX, centreY, curX, curY);
+		
 		Line2D line1 = new Line2D.Double(centreX, centreY, curX, curY);
 		Line2D line2 = new Line2D.Double(centreX, centreY, goalX, goalY);
+		double radius = euclideanDistance(centreX, centreY, curX, curY);
 		double angle = angleBetween2Lines(line1, line2);
-		return Math.toRadians(angle) * Math.PI * diameter / (Math.toRadians(360));
+		return radius * angle;
+		
 
 	}
 
 	public double angleBetween2Lines(Line2D line1, Line2D line2) {
-		double angle1 = Math.atan2(line1.getY1() - line1.getY2(), line1.getX1() - line1.getX2());
-		double angle2 = Math.atan2(line2.getY1() - line2.getY2(), line2.getX1() - line2.getX2());
-		return angle1 - angle2;
+		double angle1 = Math.atan((line1.getY1() - line1.getY2())/ (line1.getX1() - line1.getX2()));
+		double angle2 = Math.atan((line2.getY1() - line2.getY2())/ (line2.getX1() - line2.getX2()));
+		return Math.abs(angle1 - angle2);
 	}
 
 	public double manhattanDistance(double x1, double y1, double x2, double y2) {
